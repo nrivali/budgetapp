@@ -97,6 +97,16 @@ export default function Dashboard() {
     }).format(amount || 0);
   };
 
+  // Format category names: "RENT_AND_UTILITIES" -> "Rent & Utilities"
+  const formatCategory = (category) => {
+    if (!category) return '';
+    return category
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\band\b/g, '&')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   const totalSpent = budgetStatus?.budgets?.reduce((sum, b) => sum + b.total_spent, 0) || 0;
   const totalBudget = budgetStatus?.budgets?.reduce((sum, b) => sum + b.monthly_limit, 0) || 0;
   const budgetRemaining = totalBudget - totalSpent;
@@ -201,16 +211,17 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={320}>
               <PieChart>
                 <Pie
-                  data={spending.slice(0, 8)}
+                  data={spending.slice(0, 8).map(item => ({
+                    ...item,
+                    name: formatCategory(item.category)
+                  }))}
                   dataKey="total_amount"
-                  nameKey="category"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={110}
+                  outerRadius={100}
                   paddingAngle={3}
-                  label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={{ stroke: '#D1D5DB', strokeWidth: 1 }}
                 >
                   {spending.slice(0, 8).map((entry, index) => (
                     <Cell
@@ -220,7 +231,21 @@ export default function Dashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  formatter={(value, name) => [formatCurrencyFull(value), formatCategory(name)]}
+                />
+                <Legend
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                  iconType="circle"
+                  iconSize={10}
+                  formatter={(value, entry) => {
+                    const percent = ((entry.payload.total_amount / spending.slice(0, 8).reduce((sum, s) => sum + s.total_amount, 0)) * 100).toFixed(0);
+                    return <span style={{ color: '#374151', fontSize: '13px' }}>{value} ({percent}%)</span>;
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -303,7 +328,7 @@ export default function Dashboard() {
             {budgetStatus.budgets.map((budget) => (
               <div key={budget.id} className="budget-progress">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{budget.category}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{formatCategory(budget.category)}</span>
                   <span style={{
                     fontWeight: 500,
                     color: budget.is_over_budget ? 'var(--danger)' : 'var(--gray-600)',
