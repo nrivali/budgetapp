@@ -145,6 +145,15 @@ const api = {
   async getBudgetHistory(id) {
     return this.request(`/budgets/${id}/history`);
   },
+
+  // Investments
+  async getInvestmentHoldings() {
+    return this.request('/investments/holdings');
+  },
+
+  async getInvestmentTransactions() {
+    return this.request('/investments/transactions');
+  },
 };
 
 export default api;
