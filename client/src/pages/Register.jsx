@@ -2,6 +2,29 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const WalletIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+    <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,20 +52,29 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Start tracking your budget today</p>
+        <div className="auth-logo">
+          <WalletIcon />
+        </div>
+        <h1 className="auth-title">Get Started</h1>
+        <p className="auth-subtitle">Create your account to track spending</p>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && (
+          <div className="auth-error">
+            <AlertIcon />
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="name">
-              Name
+              Full Name
             </label>
             <input
               type="text"
               id="name"
               className="form-input"
+              placeholder="John Doe"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -50,12 +82,13 @@ export default function Register() {
 
           <div className="form-group">
             <label className="form-label" htmlFor="email">
-              Email
+              Email Address
             </label>
             <input
               type="email"
               id="email"
               className="form-input"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -70,6 +103,7 @@ export default function Register() {
               type="password"
               id="password"
               className="form-input"
+              placeholder="Min. 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -79,11 +113,18 @@ export default function Register() {
 
           <button
             type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem' }}
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', marginTop: '0.75rem' }}
             disabled={loading}
           >
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? (
+              <span className="animate-pulse">Creating account...</span>
+            ) : (
+              <>
+                <UserIcon />
+                Create Account
+              </>
+            )}
           </button>
         </form>
 
