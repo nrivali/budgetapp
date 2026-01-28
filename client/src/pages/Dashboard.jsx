@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import PlaidLinkButton from '../components/PlaidLink';
 
@@ -208,45 +208,50 @@ export default function Dashboard() {
               }}></span>
               Spending by Category
             </h3>
-            <ResponsiveContainer width="100%" height={320}>
-              <PieChart>
-                <Pie
-                  data={spending.slice(0, 8).map(item => ({
+            <ResponsiveContainer width="100%" height={Math.max(280, spending.slice(0, 8).length * 45)}>
+              <BarChart
+                data={spending.slice(0, 8)
+                  .sort((a, b) => b.total_amount - a.total_amount)
+                  .map((item, index) => ({
                     ...item,
-                    name: formatCategory(item.category)
+                    name: formatCategory(item.category),
+                    fill: COLORS[index % COLORS.length]
                   }))}
-                  dataKey="total_amount"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={3}
-                >
-                  {spending.slice(0, 8).map((entry, index) => (
-                    <Cell
-                      key={entry.category}
-                      fill={COLORS[index % COLORS.length]}
-                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
-                    />
-                  ))}
-                </Pie>
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis
+                  type="number"
+                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#374151', fontSize: 13, fontWeight: 500 }}
+                  width={130}
+                />
                 <Tooltip
                   content={<CustomTooltip />}
-                  formatter={(value, name) => [formatCurrencyFull(value), formatCategory(name)]}
+                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
                 />
-                <Legend
-                  layout="vertical"
-                  align="right"
-                  verticalAlign="middle"
-                  iconType="circle"
-                  iconSize={10}
-                  formatter={(value, entry) => {
-                    const percent = ((entry.payload.total_amount / spending.slice(0, 8).reduce((sum, s) => sum + s.total_amount, 0)) * 100).toFixed(0);
-                    return <span style={{ color: '#374151', fontSize: '13px' }}>{value} ({percent}%)</span>;
-                  }}
-                />
-              </PieChart>
+                <Bar
+                  dataKey="total_amount"
+                  name="Amount"
+                  radius={[0, 6, 6, 0]}
+                  barSize={28}
+                >
+                  {spending.slice(0, 8)
+                    .sort((a, b) => b.total_amount - a.total_amount)
+                    .map((entry, index) => (
+                      <Cell key={entry.category} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
