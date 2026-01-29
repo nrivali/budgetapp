@@ -12,6 +12,7 @@ const EditIcon = () => (
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [customCategories, setCustomCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
@@ -49,12 +50,14 @@ export default function Transactions() {
 
   const loadFiltersData = async () => {
     try {
-      const [categoriesData, accountsData] = await Promise.all([
+      const [categoriesData, accountsData, customCategoriesData] = await Promise.all([
         api.getCategories(),
         api.getAccounts(),
+        api.getCustomCategories(),
       ]);
       setCategories(categoriesData.categories || []);
       setAccounts(accountsData.accounts || []);
+      setCustomCategories(customCategoriesData.categories || []);
     } catch (err) {
       console.error('Error loading filter data:', err);
     }
@@ -113,48 +116,28 @@ export default function Transactions() {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  // Common budget categories
-  const commonCategories = [
-    'Food & Dining',
-    'Groceries',
-    'Transportation',
-    'Entertainment',
-    'Shopping',
-    'Utilities',
-    'Healthcare',
-    'Personal Care',
-    'Education',
-    'Travel',
-    'Subscriptions',
-    'Gifts',
-    'Home',
-    'Clothing',
-    'Fitness',
-    'Pets',
-    'Savings',
-    'Transfer',
-    'Income',
-    'Other'
-  ];
-
-  // Get filtered suggestions based on input
+  // Get filtered suggestions based on input - prioritizes custom categories
   const getSuggestions = () => {
     const input = editCategory.toLowerCase();
-    const existingFormatted = categories.map(formatCategory);
 
-    // Combine existing categories with common ones
-    const allCategories = [
-      ...existingFormatted,
-      ...commonCategories.filter(cat =>
-        !existingFormatted.some(e => e.toLowerCase() === cat.toLowerCase())
-      )
-    ];
+    // Custom categories (user-defined) - highest priority
+    const customFormatted = customCategories
+      .map(c => ({ name: formatCategory(c.name), color: c.color, isCustom: true }))
+      .filter(cat => cat.name.toLowerCase().includes(input));
 
-    // Filter by input
-    return allCategories
-      .filter(cat => cat.toLowerCase().includes(input))
-      .slice(0, 8);
+    // Existing transaction categories
+    const existingFormatted = categories
+      .map(c => ({ name: formatCategory(c), color: null, isCustom: false }))
+      .filter(cat =>
+        cat.name.toLowerCase().includes(input) &&
+        !customFormatted.some(cf => cf.name.toLowerCase() === cat.name.toLowerCase())
+      );
+
+    // Return custom categories first, then existing
+    return [...customFormatted, ...existingFormatted].slice(0, 10);
   };
+
+  const hasCustomCategories = customCategories.length > 0;
 
   const handleEditCategory = (txn) => {
     setEditingTxnId(txn.id);
@@ -328,33 +311,58 @@ export default function Transactions() {
                               position: 'absolute',
                               top: '100%',
                               left: 0,
-                              width: '200px',
+                              width: '220px',
                               background: 'white',
                               border: '1px solid var(--gray-200)',
                               borderRadius: '0.5rem',
                               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                               zIndex: 100,
                               marginTop: '0.25rem',
-                              maxHeight: '200px',
+                              maxHeight: '250px',
                               overflowY: 'auto'
                             }}>
+                              {hasCustomCategories && getSuggestions().some(c => c.isCustom) && (
+                                <div style={{
+                                  padding: '0.4rem 0.75rem',
+                                  fontSize: '0.6875rem',
+                                  fontWeight: 600,
+                                  color: 'var(--primary)',
+                                  background: 'var(--primary-50)',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>
+                                  Your Categories
+                                </div>
+                              )}
                               {getSuggestions().map((cat, idx) => (
                                 <div
                                   key={idx}
                                   onMouseDown={(e) => {
                                     e.preventDefault();
-                                    selectSuggestion(cat);
+                                    selectSuggestion(cat.name);
                                   }}
                                   style={{
                                     padding: '0.5rem 0.75rem',
                                     cursor: 'pointer',
                                     fontSize: '0.8125rem',
                                     transition: 'background 0.15s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
                                   }}
-                                  onMouseEnter={(e) => e.target.style.background = 'var(--gray-50)'}
-                                  onMouseLeave={(e) => e.target.style.background = 'white'}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                                 >
-                                  {cat}
+                                  {cat.isCustom && (
+                                    <span style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      background: cat.color || 'var(--primary)',
+                                      flexShrink: 0
+                                    }} />
+                                  )}
+                                  {cat.name}
                                 </div>
                               ))}
                             </div>

@@ -87,6 +87,17 @@ CREATE TABLE IF NOT EXISTS budgets (
   UNIQUE(user_id, category)
 );
 
+-- Custom categories (user-defined budget categories)
+CREATE TABLE IF NOT EXISTS custom_categories (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  color TEXT DEFAULT '#6366F1',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(user_id, name)
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
