@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Icon components
@@ -23,19 +22,6 @@ const BudgetsIcon = () => (
   <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
     <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-  </svg>
-);
-
-const CategoryIcon = () => (
-  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-    <line x1="7" y1="7" x2="7.01" y2="7"/>
-  </svg>
-);
-
-const ChevronIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 
@@ -72,10 +58,6 @@ const WalletIcon = () => (
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [budgetMenuOpen, setBudgetMenuOpen] = useState(false);
-
-  const isBudgetSection = location.pathname === '/budgets' || location.pathname === '/categories';
 
   const handleLogout = () => {
     logout();
@@ -115,40 +97,13 @@ export default function Layout() {
             <TransactionsIcon />
             <span>Transactions</span>
           </NavLink>
-          <div
-            className="sidebar-dropdown"
-            onMouseEnter={() => setBudgetMenuOpen(true)}
-            onMouseLeave={() => setBudgetMenuOpen(false)}
+          <NavLink
+            to="/budgets"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
           >
-            <NavLink
-              to="/budgets"
-              className={`sidebar-link ${isBudgetSection ? 'active' : ''}`}
-            >
-              <BudgetsIcon />
-              <span>Budgets</span>
-              <ChevronIcon />
-            </NavLink>
-
-            {budgetMenuOpen && (
-              <div className="sidebar-submenu">
-                <NavLink
-                  to="/budgets"
-                  end
-                  className={({ isActive }) => `submenu-link ${isActive ? 'active' : ''}`}
-                >
-                  <BudgetsIcon />
-                  <span>Budget Limits</span>
-                </NavLink>
-                <NavLink
-                  to="/categories"
-                  className={({ isActive }) => `submenu-link ${isActive ? 'active' : ''}`}
-                >
-                  <CategoryIcon />
-                  <span>Categories</span>
-                </NavLink>
-              </div>
-            )}
-          </div>
+            <BudgetsIcon />
+            <span>Budgets</span>
+          </NavLink>
           <NavLink
             to="/accounts"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
