@@ -165,29 +165,6 @@ const api = {
   async getInvestmentTransactions() {
     return this.request('/investments/transactions');
   },
-
-  // Custom Categories
-  async getCustomCategories() {
-    return this.request('/categories');
-  },
-
-  async createCustomCategory(name, color) {
-    return this.request('/categories', {
-      method: 'POST',
-      body: JSON.stringify({ name, color }),
-    });
-  },
-
-  async updateCustomCategory(id, name, color) {
-    return this.request(`/categories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ name, color }),
-    });
-  },
-
-  async deleteCustomCategory(id) {
-    return this.request(`/categories/${id}`, { method: 'DELETE' });
-  },
 };
 
 export default api;
