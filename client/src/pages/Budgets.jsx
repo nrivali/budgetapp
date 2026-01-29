@@ -163,26 +163,24 @@ export default function Budgets() {
     formatCategory(c).toLowerCase().includes(formData.category.toLowerCase())
   );
 
-  // Common budget categories to suggest
+  // Common budget categories to suggest (matches default budget categories)
   const commonCategories = [
-    'Food & Dining',
+    'Housing',
     'Groceries',
-    'Transportation',
+    'Utilities & Bills',
+    'Restaurants',
     'Entertainment',
     'Shopping',
-    'Utilities',
-    'Healthcare',
-    'Personal Care',
-    'Education',
     'Travel',
     'Subscriptions',
-    'Gifts',
-    'Home',
-    'Clothing',
-    'Fitness',
+    'Insurance',
+    'Medical',
+    'Loan Repayment',
+    'Kids',
     'Pets',
-    'Savings',
-    'Other'
+    'Gifts',
+    'Charity',
+    'Misc'
   ];
 
   // Filtered common categories

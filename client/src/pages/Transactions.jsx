@@ -4,7 +4,7 @@ import api from '../services/api';
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [customCategories, setCustomCategories] = useState([]);
+  const [budgets, setBudgets] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
@@ -36,14 +36,14 @@ export default function Transactions() {
 
   const loadFiltersData = async () => {
     try {
-      const [categoriesData, accountsData, customCategoriesData] = await Promise.all([
+      const [categoriesData, accountsData, budgetsData] = await Promise.all([
         api.getCategories(),
         api.getAccounts(),
-        api.getCustomCategories(),
+        api.getBudgets(),
       ]);
       setCategories(categoriesData.categories || []);
       setAccounts(accountsData.accounts || []);
-      setCustomCategories(customCategoriesData.categories || []);
+      setBudgets(budgetsData.budgets || []);
     } catch (err) {
       console.error('Error loading filter data:', err);
     }
@@ -226,18 +226,15 @@ export default function Transactions() {
                         }}
                       >
                         <option value="">Select category...</option>
-                        {customCategories.length > 0 && (
-                          <optgroup label="Your Categories">
-                            {customCategories.map((cat) => (
-                              <option key={cat.id} value={cat.name}>
-                                {formatCategory(cat.name)}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {customCategories.length === 0 && (
+                        {budgets.length > 0 ? (
+                          budgets.map((budget) => (
+                            <option key={budget.id} value={budget.category}>
+                              {formatCategory(budget.category)}
+                            </option>
+                          ))
+                        ) : (
                           <option value="" disabled>
-                            No categories created yet
+                            No budgets created yet
                           </option>
                         )}
                       </select>
