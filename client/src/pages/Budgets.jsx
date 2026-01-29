@@ -47,7 +47,9 @@ export default function Budgets() {
         api.getBudgetStatus(),
         api.getCategories(),
       ]);
-      setBudgets(budgetData.budgets || []);
+      // Sort budgets by monthly_limit from highest to lowest
+      const sortedBudgets = (budgetData.budgets || []).sort((a, b) => b.monthly_limit - a.monthly_limit);
+      setBudgets(sortedBudgets);
       setCategories(categoriesData.categories || []);
     } catch (err) {
       console.error('Error loading budgets:', err);
