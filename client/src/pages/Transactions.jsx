@@ -1,13 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
-
-// Edit icon
-const EditIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-  </svg>
-);
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -17,13 +9,7 @@ export default function Transactions() {
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-
-  // Category editing state
-  const [editingTxnId, setEditingTxnId] = useState(null);
-  const [editCategory, setEditCategory] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [savingCategory, setSavingCategory] = useState(false);
-  const editInputRef = useRef(null);
+  const [savingTxnId, setSavingTxnId] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -116,6 +102,7 @@ export default function Transactions() {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
+<<<<<<< HEAD
   // Get filtered suggestions based on input - prioritizes custom categories
   const getSuggestions = () => {
     const input = editCategory.toLowerCase();
@@ -159,38 +146,28 @@ export default function Transactions() {
     }
 
     setSavingCategory(true);
+=======
+  // Handle category change from dropdown
+  const handleCategoryChange = async (txnId, newCategoryName) => {
+    if (!newCategoryName) return;
+
+    setSavingTxnId(txnId);
+>>>>>>> 280851c34208fec6a0c11969d5412bf350c0a5e3
     try {
-      // Convert to uppercase with underscores for storage
-      const categoryKey = editCategory.trim().toUpperCase().replace(/\s+/g, '_').replace(/&/g, 'AND');
-      await api.updateTransactionCategory(txnId, categoryKey);
+      await api.updateTransactionCategory(txnId, newCategoryName);
 
       // Update local state
       setTransactions(prev =>
-        prev.map(t => t.id === txnId ? { ...t, category: categoryKey } : t)
+        prev.map(t => t.id === txnId ? { ...t, category: newCategoryName } : t)
       );
 
       // Refresh categories list
       loadFiltersData();
-      handleCancelEdit();
     } catch (err) {
       console.error('Error updating category:', err);
     } finally {
-      setSavingCategory(false);
+      setSavingTxnId(null);
     }
-  };
-
-  const handleKeyDown = (e, txnId) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSaveCategory(txnId);
-    } else if (e.key === 'Escape') {
-      handleCancelEdit();
-    }
-  };
-
-  const selectSuggestion = (category) => {
-    setEditCategory(category);
-    setShowSuggestions(false);
   };
 
   return (
@@ -278,6 +255,7 @@ export default function Transactions() {
                         <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{txn.name}</div>
                       )}
                     </td>
+<<<<<<< HEAD
                     <td style={{ position: 'relative' }}>
                       {editingTxnId === txn.id ? (
                         <div style={{ position: 'relative' }}>
@@ -390,6 +368,40 @@ export default function Transactions() {
                           <EditIcon />
                         </span>
                       )}
+=======
+                    <td>
+                      <select
+                        value={txn.category || ''}
+                        onChange={(e) => handleCategoryChange(txn.id, e.target.value)}
+                        disabled={savingTxnId === txn.id}
+                        style={{
+                          padding: '0.375rem 0.5rem',
+                          fontSize: '0.8125rem',
+                          border: '1px solid var(--gray-200)',
+                          borderRadius: '0.375rem',
+                          background: savingTxnId === txn.id ? 'var(--gray-100)' : 'white',
+                          cursor: savingTxnId === txn.id ? 'wait' : 'pointer',
+                          minWidth: '140px',
+                          color: 'var(--gray-700)',
+                        }}
+                      >
+                        <option value="">Select category...</option>
+                        {customCategories.length > 0 && (
+                          <optgroup label="Your Categories">
+                            {customCategories.map((cat) => (
+                              <option key={cat.id} value={cat.name}>
+                                {formatCategory(cat.name)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {customCategories.length === 0 && (
+                          <option value="" disabled>
+                            No categories created yet
+                          </option>
+                        )}
+                      </select>
+>>>>>>> 280851c34208fec6a0c11969d5412bf350c0a5e3
                     </td>
                     <td>{txn.account_name} (...{txn.account_mask})</td>
                     <td style={{ textAlign: 'right' }}>
