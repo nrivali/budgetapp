@@ -1,13 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
-
-// Edit icon
-const EditIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-  </svg>
-);
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -17,13 +9,7 @@ export default function Transactions() {
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-
-  // Category editing state
-  const [editingTxnId, setEditingTxnId] = useState(null);
-  const [editCategory, setEditCategory] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [savingCategory, setSavingCategory] = useState(false);
-  const editInputRef = useRef(null);
+  const [savingTxnId, setSavingTxnId] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -116,81 +102,26 @@ export default function Transactions() {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  // Get filtered suggestions based on input - prioritizes custom categories
-  const getSuggestions = () => {
-    const input = editCategory.toLowerCase();
+  // Handle category change from dropdown
+  const handleCategoryChange = async (txnId, newCategoryName) => {
+    if (!newCategoryName) return;
 
-    // Custom categories (user-defined) - highest priority
-    const customFormatted = customCategories
-      .map(c => ({ name: formatCategory(c.name), color: c.color, isCustom: true }))
-      .filter(cat => cat.name.toLowerCase().includes(input));
-
-    // Existing transaction categories
-    const existingFormatted = categories
-      .map(c => ({ name: formatCategory(c), color: null, isCustom: false }))
-      .filter(cat =>
-        cat.name.toLowerCase().includes(input) &&
-        !customFormatted.some(cf => cf.name.toLowerCase() === cat.name.toLowerCase())
-      );
-
-    // Return custom categories first, then existing
-    return [...customFormatted, ...existingFormatted].slice(0, 10);
-  };
-
-  const hasCustomCategories = customCategories.length > 0;
-
-  const handleEditCategory = (txn) => {
-    setEditingTxnId(txn.id);
-    setEditCategory(formatCategory(txn.category));
-    setShowSuggestions(true);
-    setTimeout(() => editInputRef.current?.focus(), 50);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTxnId(null);
-    setEditCategory('');
-    setShowSuggestions(false);
-  };
-
-  const handleSaveCategory = async (txnId) => {
-    if (!editCategory.trim()) {
-      handleCancelEdit();
-      return;
-    }
-
-    setSavingCategory(true);
+    setSavingTxnId(txnId);
     try {
-      // Convert to uppercase with underscores for storage
-      const categoryKey = editCategory.trim().toUpperCase().replace(/\s+/g, '_').replace(/&/g, 'AND');
-      await api.updateTransactionCategory(txnId, categoryKey);
+      await api.updateTransactionCategory(txnId, newCategoryName);
 
       // Update local state
       setTransactions(prev =>
-        prev.map(t => t.id === txnId ? { ...t, category: categoryKey } : t)
+        prev.map(t => t.id === txnId ? { ...t, category: newCategoryName } : t)
       );
 
       // Refresh categories list
       loadFiltersData();
-      handleCancelEdit();
     } catch (err) {
       console.error('Error updating category:', err);
     } finally {
-      setSavingCategory(false);
+      setSavingTxnId(null);
     }
-  };
-
-  const handleKeyDown = (e, txnId) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSaveCategory(txnId);
-    } else if (e.key === 'Escape') {
-      handleCancelEdit();
-    }
-  };
-
-  const selectSuggestion = (category) => {
-    setEditCategory(category);
-    setShowSuggestions(false);
   };
 
   return (
@@ -278,118 +209,38 @@ export default function Transactions() {
                         <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{txn.name}</div>
                       )}
                     </td>
-                    <td style={{ position: 'relative' }}>
-                      {editingTxnId === txn.id ? (
-                        <div style={{ position: 'relative' }}>
-                          <input
-                            ref={editInputRef}
-                            type="text"
-                            value={editCategory}
-                            onChange={(e) => {
-                              setEditCategory(e.target.value);
-                              setShowSuggestions(true);
-                            }}
-                            onKeyDown={(e) => handleKeyDown(e, txn.id)}
-                            onBlur={() => setTimeout(() => {
-                              if (!savingCategory) handleCancelEdit();
-                            }, 200)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.75rem',
-                              border: '2px solid var(--primary)',
-                              borderRadius: '0.25rem',
-                              outline: 'none',
-                              width: '140px',
-                            }}
-                            disabled={savingCategory}
-                            autoComplete="off"
-                          />
-
-                          {/* Suggestions dropdown */}
-                          {showSuggestions && getSuggestions().length > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '100%',
-                              left: 0,
-                              width: '220px',
-                              background: 'white',
-                              border: '1px solid var(--gray-200)',
-                              borderRadius: '0.5rem',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                              zIndex: 100,
-                              marginTop: '0.25rem',
-                              maxHeight: '250px',
-                              overflowY: 'auto'
-                            }}>
-                              {hasCustomCategories && getSuggestions().some(c => c.isCustom) && (
-                                <div style={{
-                                  padding: '0.4rem 0.75rem',
-                                  fontSize: '0.6875rem',
-                                  fontWeight: 600,
-                                  color: 'var(--primary)',
-                                  background: 'var(--primary-50)',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em'
-                                }}>
-                                  Your Categories
-                                </div>
-                              )}
-                              {getSuggestions().map((cat, idx) => (
-                                <div
-                                  key={idx}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    selectSuggestion(cat.name);
-                                  }}
-                                  style={{
-                                    padding: '0.5rem 0.75rem',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8125rem',
-                                    transition: 'background 0.15s',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                                >
-                                  {cat.isCustom && (
-                                    <span style={{
-                                      width: '8px',
-                                      height: '8px',
-                                      borderRadius: '50%',
-                                      background: cat.color || 'var(--primary)',
-                                      flexShrink: 0
-                                    }} />
-                                  )}
-                                  {cat.name}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span
-                          onClick={() => handleEditCategory(txn)}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            background: '#F3F4F6',
-                            borderRadius: '0.25rem',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            transition: 'background 0.15s',
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#E5E7EB'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = '#F3F4F6'}
-                          title="Click to edit category"
-                        >
-                          {formatCategory(txn.category)}
-                          <EditIcon />
-                        </span>
-                      )}
+                    <td>
+                      <select
+                        value={txn.category || ''}
+                        onChange={(e) => handleCategoryChange(txn.id, e.target.value)}
+                        disabled={savingTxnId === txn.id}
+                        style={{
+                          padding: '0.375rem 0.5rem',
+                          fontSize: '0.8125rem',
+                          border: '1px solid var(--gray-200)',
+                          borderRadius: '0.375rem',
+                          background: savingTxnId === txn.id ? 'var(--gray-100)' : 'white',
+                          cursor: savingTxnId === txn.id ? 'wait' : 'pointer',
+                          minWidth: '140px',
+                          color: 'var(--gray-700)',
+                        }}
+                      >
+                        <option value="">Select category...</option>
+                        {customCategories.length > 0 && (
+                          <optgroup label="Your Categories">
+                            {customCategories.map((cat) => (
+                              <option key={cat.id} value={cat.name}>
+                                {formatCategory(cat.name)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {customCategories.length === 0 && (
+                          <option value="" disabled>
+                            No categories created yet
+                          </option>
+                        )}
+                      </select>
                     </td>
                     <td>{txn.account_name} (...{txn.account_mask})</td>
                     <td style={{ textAlign: 'right' }}>
