@@ -160,8 +160,8 @@ router.get('/analytics/monthly', authenticateToken, async (req, res, next) => {
     const monthly = await dbAll(
       `SELECT
          strftime('%Y-%m', date) as month,
-         SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_spending,
-         SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_income,
+         SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_spending,
+         SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_income,
          COUNT(*) as transaction_count
        FROM transactions
        WHERE user_id = ? AND strftime('%Y', date) = ?
