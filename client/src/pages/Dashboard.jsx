@@ -174,7 +174,7 @@ export default function Dashboard() {
           }}>
             {/* Cash Accounts */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
@@ -196,32 +196,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {cashAccounts.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
-                  {cashAccounts.map(account => (
-                    <div key={account.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.5rem 0',
-                      fontSize: '0.875rem'
-                    }}>
-                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>
-                        {formatCurrency(account.current_balance)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
-                  No cash accounts linked
-                </div>
-              )}
             </div>
 
             {/* Investment Accounts */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
@@ -243,32 +222,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {investmentAccounts.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
-                  {investmentAccounts.map(account => (
-                    <div key={account.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.5rem 0',
-                      fontSize: '0.875rem'
-                    }}>
-                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>
-                        {formatCurrency(account.current_balance)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
-                  No investment accounts linked
-                </div>
-              )}
             </div>
 
             {/* Property Value */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
@@ -290,32 +248,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {propertyAccounts.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
-                  {propertyAccounts.map(account => (
-                    <div key={account.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.5rem 0',
-                      fontSize: '0.875rem'
-                    }}>
-                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>
-                        {formatCurrency(account.current_balance)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
-                  No property accounts linked
-                </div>
-              )}
             </div>
 
             {/* Credit Accounts */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
@@ -337,32 +274,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {creditAccounts.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
-                  {creditAccounts.map(account => (
-                    <div key={account.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.5rem 0',
-                      fontSize: '0.875rem'
-                    }}>
-                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--danger)' }}>
-                        -{formatCurrency(Math.abs(account.current_balance))}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
-                  No credit accounts linked
-                </div>
-              )}
             </div>
 
             {/* Loan Accounts */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
@@ -384,27 +300,6 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {loanAccounts.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
-                  {loanAccounts.map(account => (
-                    <div key={account.id} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.5rem 0',
-                      fontSize: '0.875rem'
-                    }}>
-                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--danger)' }}>
-                        -{formatCurrency(Math.abs(account.current_balance))}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
-                  No loan accounts linked
-                </div>
-              )}
             </div>
           </div>
         </>
