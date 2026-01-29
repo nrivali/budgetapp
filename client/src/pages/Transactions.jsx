@@ -1,5 +1,130 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+
+// Searchable category dropdown component
+function CategoryDropdown({ value, options, onChange, disabled, formatCategory }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Filter options based on search
+  const filteredOptions = options.filter(opt =>
+    formatCategory(opt.category).toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+        setSearch('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Focus input when dropdown opens
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const handleSelect = (category) => {
+    onChange(category);
+    setIsOpen(false);
+    setSearch('');
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', minWidth: '160px' }}>
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          padding: '0.375rem 0.5rem',
+          fontSize: '0.8125rem',
+          border: '1px solid var(--gray-200)',
+          borderRadius: '0.375rem',
+          background: disabled ? 'var(--gray-100)' : 'white',
+          cursor: disabled ? 'wait' : 'pointer',
+          color: value ? 'var(--gray-700)' : 'var(--gray-400)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <span>{value ? formatCategory(value) : 'Select category...'}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '4px',
+          background: 'white',
+          border: '1px solid var(--gray-200)',
+          borderRadius: '0.5rem',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 100,
+          maxHeight: '240px',
+          overflow: 'hidden',
+        }}>
+          <div style={{ padding: '0.5rem', borderBottom: '1px solid var(--gray-100)' }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Type to search..."
+              style={{
+                width: '100%',
+                padding: '0.375rem 0.5rem',
+                fontSize: '0.8125rem',
+                border: '1px solid var(--gray-200)',
+                borderRadius: '0.375rem',
+                outline: 'none',
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--gray-200)'}
+            />
+          </div>
+          <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => (
+                <div
+                  key={opt.id}
+                  onClick={() => handleSelect(opt.category)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.8125rem',
+                    cursor: 'pointer',
+                    background: opt.category === value ? 'var(--primary-light)' : 'white',
+                    color: 'var(--gray-700)',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = opt.category === value ? 'var(--primary-light)' : 'white'}
+                >
+                  {formatCategory(opt.category)}
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '0.75rem', fontSize: '0.8125rem', color: 'var(--gray-400)', textAlign: 'center' }}>
+                No matching categories
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -210,34 +335,13 @@ export default function Transactions() {
                       )}
                     </td>
                     <td>
-                      <select
-                        value={txn.category || ''}
-                        onChange={(e) => handleCategoryChange(txn.id, e.target.value)}
+                      <CategoryDropdown
+                        value={txn.category}
+                        options={budgets}
+                        onChange={(category) => handleCategoryChange(txn.id, category)}
                         disabled={savingTxnId === txn.id}
-                        style={{
-                          padding: '0.375rem 0.5rem',
-                          fontSize: '0.8125rem',
-                          border: '1px solid var(--gray-200)',
-                          borderRadius: '0.375rem',
-                          background: savingTxnId === txn.id ? 'var(--gray-100)' : 'white',
-                          cursor: savingTxnId === txn.id ? 'wait' : 'pointer',
-                          minWidth: '140px',
-                          color: 'var(--gray-700)',
-                        }}
-                      >
-                        <option value="">Select category...</option>
-                        {budgets.length > 0 ? (
-                          budgets.map((budget) => (
-                            <option key={budget.id} value={budget.category}>
-                              {formatCategory(budget.category)}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>
-                            No budgets created yet
-                          </option>
-                        )}
-                      </select>
+                        formatCategory={formatCategory}
+                      />
                     </td>
                     <td>{txn.account_name} (...{txn.account_mask})</td>
                     <td style={{ textAlign: 'right' }}>
