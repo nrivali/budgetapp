@@ -166,137 +166,165 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Account Type Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1.5rem'
-          }}>
-            {/* Cash Accounts */}
+          {/* Assets and Liabilities Groups */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+            {/* Assets Group */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '1rem',
-                  background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <CashIcon />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
-                    Cash Accounts
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.25rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid var(--gray-100)'
+              }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)', margin: 0 }}>
+                  Assets
+                </h3>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--success)' }}>
+                  {formatCurrency(totalAssets)}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Cash */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <CashIcon style={{ width: 24, height: 24 }} />
                   </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--gray-900)' }}>
-                    {formatCurrency(totalCash)}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                      Cash
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {formatCurrency(totalCash)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Investments */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(135deg, #6366F1 0%, #818CF8 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <InvestmentIcon style={{ width: 24, height: 24 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                      Investments
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {formatCurrency(totalInvestments)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <PropertyIcon style={{ width: 24, height: 24 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                      Property
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                      {formatCurrency(totalProperty)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Investment Accounts */}
+            {/* Liabilities Group */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '1rem',
-                  background: 'linear-gradient(135deg, #6366F1 0%, #818CF8 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <InvestmentIcon />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
-                    Investment Accounts
-                  </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--gray-900)' }}>
-                    {formatCurrency(totalInvestments)}
-                  </div>
-                </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.25rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid var(--gray-100)'
+              }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)', margin: 0 }}>
+                  Liabilities
+                </h3>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--danger)' }}>
+                  -{formatCurrency(totalLiabilities)}
+                </span>
               </div>
-            </div>
 
-            {/* Property Value */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '1rem',
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <PropertyIcon />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
-                    Property Value
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Credit */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <CreditCardIcon style={{ width: 24, height: 24 }} />
                   </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--gray-900)' }}>
-                    {formatCurrency(totalProperty)}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                      Credit Cards
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--danger)' }}>
+                      -{formatCurrency(totalCredit)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Credit Accounts */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '1rem',
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <CreditCardIcon />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
-                    Credit Accounts
+                {/* Loans */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <LoanIcon style={{ width: 24, height: 24 }} />
                   </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--danger)' }}>
-                    -{formatCurrency(totalCredit)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Loan Accounts */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '1rem',
-                  background: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <LoanIcon />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
-                    Loan Accounts
-                  </div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--danger)' }}>
-                    -{formatCurrency(totalLoans)}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                      Loans
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--danger)' }}>
+                      -{formatCurrency(totalLoans)}
+                    </div>
                   </div>
                 </div>
               </div>
