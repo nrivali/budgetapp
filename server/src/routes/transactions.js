@@ -192,4 +192,37 @@ router.get('/meta/categories', authenticateToken, async (req, res, next) => {
   }
 });
 
+// Update transaction category
+router.put('/:id/category', authenticateToken, async (req, res, next) => {
+  try {
+    const { category } = req.body;
+    const { id } = req.params;
+
+    if (!category || typeof category !== 'string') {
+      return res.status(400).json({ error: 'Category is required' });
+    }
+
+    // Verify transaction belongs to user
+    const transaction = await dbGet(
+      'SELECT * FROM transactions WHERE id = ? AND user_id = ?',
+      [id, req.user.userId]
+    );
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    // Update category
+    const { dbRun } = require('../db/database');
+    await dbRun(
+      'UPDATE transactions SET category = ? WHERE id = ? AND user_id = ?',
+      [category, id, req.user.userId]
+    );
+
+    res.json({ success: true, category });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

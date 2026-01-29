@@ -1,5 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+
+// Edit icon
+const EditIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -8,6 +16,13 @@ export default function Transactions() {
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+
+  // Category editing state
+  const [editingTxnId, setEditingTxnId] = useState(null);
+  const [editCategory, setEditCategory] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const editInputRef = useRef(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -88,6 +103,113 @@ export default function Transactions() {
     });
   };
 
+  // Format category names: "RENT_AND_UTILITIES" -> "Rent & Utilities"
+  const formatCategory = (category) => {
+    if (!category) return 'Uncategorized';
+    return category
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\band\b/g, '&')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  // Common budget categories
+  const commonCategories = [
+    'Food & Dining',
+    'Groceries',
+    'Transportation',
+    'Entertainment',
+    'Shopping',
+    'Utilities',
+    'Healthcare',
+    'Personal Care',
+    'Education',
+    'Travel',
+    'Subscriptions',
+    'Gifts',
+    'Home',
+    'Clothing',
+    'Fitness',
+    'Pets',
+    'Savings',
+    'Transfer',
+    'Income',
+    'Other'
+  ];
+
+  // Get filtered suggestions based on input
+  const getSuggestions = () => {
+    const input = editCategory.toLowerCase();
+    const existingFormatted = categories.map(formatCategory);
+
+    // Combine existing categories with common ones
+    const allCategories = [
+      ...existingFormatted,
+      ...commonCategories.filter(cat =>
+        !existingFormatted.some(e => e.toLowerCase() === cat.toLowerCase())
+      )
+    ];
+
+    // Filter by input
+    return allCategories
+      .filter(cat => cat.toLowerCase().includes(input))
+      .slice(0, 8);
+  };
+
+  const handleEditCategory = (txn) => {
+    setEditingTxnId(txn.id);
+    setEditCategory(formatCategory(txn.category));
+    setShowSuggestions(true);
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTxnId(null);
+    setEditCategory('');
+    setShowSuggestions(false);
+  };
+
+  const handleSaveCategory = async (txnId) => {
+    if (!editCategory.trim()) {
+      handleCancelEdit();
+      return;
+    }
+
+    setSavingCategory(true);
+    try {
+      // Convert to uppercase with underscores for storage
+      const categoryKey = editCategory.trim().toUpperCase().replace(/\s+/g, '_').replace(/&/g, 'AND');
+      await api.updateTransactionCategory(txnId, categoryKey);
+
+      // Update local state
+      setTransactions(prev =>
+        prev.map(t => t.id === txnId ? { ...t, category: categoryKey } : t)
+      );
+
+      // Refresh categories list
+      loadFiltersData();
+      handleCancelEdit();
+    } catch (err) {
+      console.error('Error updating category:', err);
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleKeyDown = (e, txnId) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveCategory(txnId);
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  const selectSuggestion = (category) => {
+    setEditCategory(category);
+    setShowSuggestions(false);
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -106,7 +228,7 @@ export default function Transactions() {
           <option value="">All Categories</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {formatCategory(cat)}
             </option>
           ))}
         </select>
@@ -173,17 +295,93 @@ export default function Transactions() {
                         <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{txn.name}</div>
                       )}
                     </td>
-                    <td>
-                      <span
-                        style={{
-                          padding: '0.25rem 0.5rem',
-                          background: '#F3F4F6',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {txn.category || 'Uncategorized'}
-                      </span>
+                    <td style={{ position: 'relative' }}>
+                      {editingTxnId === txn.id ? (
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            ref={editInputRef}
+                            type="text"
+                            value={editCategory}
+                            onChange={(e) => {
+                              setEditCategory(e.target.value);
+                              setShowSuggestions(true);
+                            }}
+                            onKeyDown={(e) => handleKeyDown(e, txn.id)}
+                            onBlur={() => setTimeout(() => {
+                              if (!savingCategory) handleCancelEdit();
+                            }, 200)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.75rem',
+                              border: '2px solid var(--primary)',
+                              borderRadius: '0.25rem',
+                              outline: 'none',
+                              width: '140px',
+                            }}
+                            disabled={savingCategory}
+                            autoComplete="off"
+                          />
+
+                          {/* Suggestions dropdown */}
+                          {showSuggestions && getSuggestions().length > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              width: '200px',
+                              background: 'white',
+                              border: '1px solid var(--gray-200)',
+                              borderRadius: '0.5rem',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              zIndex: 100,
+                              marginTop: '0.25rem',
+                              maxHeight: '200px',
+                              overflowY: 'auto'
+                            }}>
+                              {getSuggestions().map((cat, idx) => (
+                                <div
+                                  key={idx}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    selectSuggestion(cat);
+                                  }}
+                                  style={{
+                                    padding: '0.5rem 0.75rem',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8125rem',
+                                    transition: 'background 0.15s',
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.background = 'var(--gray-50)'}
+                                  onMouseLeave={(e) => e.target.style.background = 'white'}
+                                >
+                                  {cat}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span
+                          onClick={() => handleEditCategory(txn)}
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            background: '#F3F4F6',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#E5E7EB'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                          title="Click to edit category"
+                        >
+                          {formatCategory(txn.category)}
+                          <EditIcon />
+                        </span>
+                      )}
                     </td>
                     <td>{txn.account_name} (...{txn.account_mask})</td>
                     <td style={{ textAlign: 'right' }}>

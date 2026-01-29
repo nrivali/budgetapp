@@ -115,6 +115,13 @@ const api = {
     return this.request('/transactions/meta/categories');
   },
 
+  async updateTransactionCategory(transactionId, category) {
+    return this.request(`/transactions/${transactionId}/category`, {
+      method: 'PUT',
+      body: JSON.stringify({ category }),
+    });
+  },
+
   // Budgets
   async getBudgets() {
     return this.request('/budgets');
