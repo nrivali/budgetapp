@@ -66,11 +66,11 @@ export default function Dashboard() {
       ]);
       setAccounts(accountsData.accounts || []);
 
-      // Get current month's data
+      // Get current month's data (format: '2024-01')
       const monthly = monthlySpending.monthly || [];
       const now = new Date();
-      const currentMonth = now.toLocaleString('default', { month: 'short' });
-      const currentMonthData = monthly.find(m => m.month === currentMonth);
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const currentMonthData = monthly.find(m => m.month === currentMonthKey);
       setMonthlyData(currentMonthData || { total_income: 0, total_spending: 0 });
     } catch (err) {
       console.error('Error loading dashboard:', err);
