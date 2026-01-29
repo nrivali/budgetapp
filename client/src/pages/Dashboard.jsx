@@ -55,12 +55,23 @@ const SparklesIcon = () => (
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState([]);
+  const [monthlyData, setMonthlyData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
-      const accountsData = await api.getAccounts();
+      const [accountsData, monthlySpending] = await Promise.all([
+        api.getAccounts(),
+        api.getMonthlySpending(),
+      ]);
       setAccounts(accountsData.accounts || []);
+
+      // Get current month's data
+      const monthly = monthlySpending.monthly || [];
+      const now = new Date();
+      const currentMonth = now.toLocaleString('default', { month: 'short' });
+      const currentMonthData = monthly.find(m => m.month === currentMonth);
+      setMonthlyData(currentMonthData || { total_income: 0, total_spending: 0 });
     } catch (err) {
       console.error('Error loading dashboard:', err);
     } finally {
@@ -330,6 +341,92 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* Income vs Expenses */}
+          {monthlyData && (
+            <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)', margin: 0, marginBottom: '1.25rem' }}>
+                This Month
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                {/* Income */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500, marginBottom: '0.5rem' }}>
+                    Income
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--success)' }}>
+                    +{formatCurrency(monthlyData.total_income || 0)}
+                  </div>
+                </div>
+
+                {/* Expenses */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500, marginBottom: '0.5rem' }}>
+                    Expenses
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--danger)' }}>
+                    -{formatCurrency(monthlyData.total_spending || 0)}
+                  </div>
+                </div>
+
+                {/* Net */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500, marginBottom: '0.5rem' }}>
+                    Net
+                  </div>
+                  <div style={{
+                    fontSize: '1.75rem',
+                    fontWeight: 700,
+                    color: (monthlyData.total_income || 0) - (monthlyData.total_spending || 0) >= 0 ? 'var(--success)' : 'var(--danger)'
+                  }}>
+                    {(monthlyData.total_income || 0) - (monthlyData.total_spending || 0) >= 0 ? '+' : ''}
+                    {formatCurrency((monthlyData.total_income || 0) - (monthlyData.total_spending || 0))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress bar visualization */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  height: '12px',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                  background: 'var(--gray-100)'
+                }}>
+                  {(monthlyData.total_income || 0) > 0 && (
+                    <div style={{
+                      width: `${Math.min(((monthlyData.total_spending || 0) / (monthlyData.total_income || 1)) * 100, 100)}%`,
+                      background: (monthlyData.total_spending || 0) > (monthlyData.total_income || 0)
+                        ? 'linear-gradient(90deg, var(--danger), #F87171)'
+                        : 'linear-gradient(90deg, var(--success), #34D399)',
+                      borderRadius: '6px',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  )}
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '0.5rem',
+                  fontSize: '0.75rem',
+                  color: 'var(--gray-500)'
+                }}>
+                  <span>
+                    {(monthlyData.total_income || 0) > 0
+                      ? `${Math.round(((monthlyData.total_spending || 0) / (monthlyData.total_income || 1)) * 100)}% of income spent`
+                      : 'No income recorded'}
+                  </span>
+                  <span>
+                    {(monthlyData.total_income || 0) - (monthlyData.total_spending || 0) >= 0
+                      ? `${formatCurrency((monthlyData.total_income || 0) - (monthlyData.total_spending || 0))} saved`
+                      : `${formatCurrency(Math.abs((monthlyData.total_income || 0) - (monthlyData.total_spending || 0)))} overspent`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
