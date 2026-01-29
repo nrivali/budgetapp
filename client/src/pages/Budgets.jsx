@@ -226,54 +226,158 @@ export default function Budgets() {
           </div>
         </div>
       ) : (
-        <div className="card-grid">
-          {budgets.map((budget) => (
-            <div key={budget.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div className="card-title">{formatCategory(budget.category)}</div>
-                  <div className="card-value">{formatCurrency(budget.monthly_limit)}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
+          {/* Left side - Category List */}
+          <div className="card">
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--gray-900)' }}>
+              Budget Categories
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '500px', overflowY: 'auto' }}>
+              {budgets.map((budget) => (
+                <div
+                  key={budget.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem',
+                    background: 'var(--gray-50)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--gray-900)' }}>
+                      {formatCategory(budget.category)}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>
+                      {formatCurrency(budget.monthly_limit)}/month
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.375rem' }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleOpenModal(budget)}
+                      style={{ padding: '0.375rem' }}
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDelete(budget.id)}
+                      style={{ padding: '0.375rem' }}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-secondary btn-sm" onClick={() => handleOpenModal(budget)}>
-                    <EditIcon />
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(budget.id)}>
-                    <TrashIcon />
-                  </button>
+              ))}
+            </div>
+            <button
+              className="btn btn-secondary"
+              onClick={() => handleOpenModal()}
+              style={{ width: '100%', marginTop: '1rem' }}
+            >
+              <PlusIcon />
+              Add Category
+            </button>
+          </div>
+
+          {/* Right side - Spending Overview */}
+          <div className="card">
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.25rem', color: 'var(--gray-900)' }}>
+              Remaining Budget
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {budgets.map((budget) => {
+                const percentRemaining = Math.max(0, 100 - budget.percent_used);
+                const statusColor = budget.is_over_budget
+                  ? 'var(--danger)'
+                  : budget.percent_used > 80
+                    ? 'var(--warning)'
+                    : 'var(--success)';
+
+                return (
+                  <div key={budget.id} style={{
+                    padding: '1rem',
+                    background: 'var(--gray-50)',
+                    borderRadius: 'var(--radius-lg)',
+                    borderLeft: `4px solid ${statusColor}`,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>
+                        {formatCategory(budget.category)}
+                      </span>
+                      <span style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: statusColor,
+                      }}>
+                        {budget.is_over_budget ? '-' : ''}{formatCurrency(Math.abs(budget.remaining))}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        flex: 1,
+                        height: '8px',
+                        background: 'var(--gray-200)',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${Math.min(budget.percent_used, 100)}%`,
+                          height: '100%',
+                          background: statusColor,
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease'
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', minWidth: '60px', textAlign: 'right' }}>
+                        {formatCurrency(budget.total_spent)} / {formatCurrency(budget.monthly_limit)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginTop: '0.375rem' }}>
+                      {budget.is_over_budget
+                        ? `${budget.percent_used.toFixed(0)}% - Over budget!`
+                        : `${percentRemaining.toFixed(0)}% remaining`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary */}
+            <div style={{
+              marginTop: '1.5rem',
+              paddingTop: '1.25rem',
+              borderTop: '1px solid var(--gray-200)',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '1rem'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Budget</div>
+                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                  {formatCurrency(budgets.reduce((sum, b) => sum + b.monthly_limit, 0))}
                 </div>
               </div>
-
-              <div className="budget-progress">
-                <div className="progress-bar">
-                  <div
-                    className={`progress-fill ${
-                      budget.percent_used > 100 ? 'over' : budget.percent_used > 80 ? 'warning' : 'under'
-                    }`}
-                    style={{ width: `${Math.min(budget.percent_used, 100)}%` }}
-                  />
-                </div>
-                <div className="budget-info">
-                  <span>
-                    {formatCurrency(budget.total_spent)} spent
-                  </span>
-                  <span
-                    style={{
-                      color: budget.is_over_budget ? 'var(--danger)' : 'var(--success)',
-                    }}
-                  >
-                    {budget.is_over_budget
-                      ? `${formatCurrency(Math.abs(budget.remaining))} over`
-                      : `${formatCurrency(budget.remaining)} left`}
-                  </span>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Spent</div>
+                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                  {formatCurrency(budgets.reduce((sum, b) => sum + b.total_spent, 0))}
                 </div>
               </div>
-
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--gray-500)' }}>
-                {budget.percent_used.toFixed(0)}% of budget used
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Remaining</div>
+                <div style={{
+                  fontSize: '1.125rem',
+                  fontWeight: 700,
+                  color: budgets.reduce((sum, b) => sum + b.remaining, 0) >= 0 ? 'var(--success)' : 'var(--danger)'
+                }}>
+                  {formatCurrency(budgets.reduce((sum, b) => sum + b.remaining, 0))}
+                </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
 
