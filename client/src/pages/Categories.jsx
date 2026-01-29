@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
-// Icons
 const PlusIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <line x1="12" y1="5" x2="12" y2="19"/>
@@ -30,20 +29,10 @@ const TagIcon = () => (
   </svg>
 );
 
-// Preset colors for categories
 const PRESET_COLORS = [
-  '#6366F1', // Indigo
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#EF4444', // Red
-  '#F97316', // Orange
-  '#F59E0B', // Amber
-  '#84CC16', // Lime
-  '#22C55E', // Green
-  '#14B8A6', // Teal
-  '#06B6D4', // Cyan
-  '#3B82F6', // Blue
-  '#64748B', // Slate
+  '#6366F1', '#8B5CF6', '#EC4899', '#EF4444',
+  '#F97316', '#F59E0B', '#84CC16', '#22C55E',
+  '#14B8A6', '#06B6D4', '#3B82F6', '#64748B',
 ];
 
 export default function Categories() {
@@ -69,7 +58,6 @@ export default function Categories() {
     loadCategories();
   }, []);
 
-  // Format category names: "RENT_AND_UTILITIES" -> "Rent & Utilities"
   const formatCategory = (category) => {
     if (!category) return '';
     return category
@@ -173,7 +161,6 @@ export default function Categories() {
                   padding: '1rem 1.25rem',
                   background: 'var(--gray-50)',
                   borderRadius: 'var(--radius-lg)',
-                  transition: 'all 0.15s',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -203,16 +190,10 @@ export default function Categories() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleOpenModal(category)}
-                  >
+                  <button className="btn btn-secondary btn-sm" onClick={() => handleOpenModal(category)}>
                     <EditIcon />
                   </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(category.id)}
-                  >
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(category.id)}>
                     <TrashIcon />
                   </button>
                 </div>
@@ -226,7 +207,7 @@ export default function Categories() {
         <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 600 }}>How it works</h3>
         <p style={{ color: 'var(--gray-600)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
           Custom categories you create here will appear in the dropdown when editing transaction
-          categories. Use them to organize your spending in a way that makes sense for you.
+          categories on the Transactions page. Use them to organize your spending your way.
         </p>
       </div>
 
@@ -270,8 +251,6 @@ export default function Categories() {
                         cursor: 'pointer',
                         transition: 'transform 0.15s',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     />
                   ))}
                 </div>

@@ -12,7 +12,6 @@ router.get('/', authenticateToken, async (req, res, next) => {
       'SELECT * FROM custom_categories WHERE user_id = ? ORDER BY name',
       [req.user.userId]
     );
-
     res.json({ categories });
   } catch (error) {
     next(error);

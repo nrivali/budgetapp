@@ -87,13 +87,12 @@ CREATE TABLE IF NOT EXISTS budgets (
   UNIQUE(user_id, category)
 );
 
--- Custom categories (user-defined)
+-- Custom categories (user-defined budget categories)
 CREATE TABLE IF NOT EXISTS custom_categories (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   name TEXT NOT NULL,
   color TEXT DEFAULT '#6366F1',
-  icon TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE(user_id, name)
@@ -105,7 +104,6 @@ CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
-CREATE INDEX IF NOT EXISTS idx_custom_categories_user_id ON custom_categories(user_id);
 `;
 
 db.exec(schema, (err) => {
