@@ -228,7 +228,32 @@ export default function Budgets() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
+        <>
+          {/* Summary Cards */}
+          <div className="card-grid" style={{ marginBottom: '1.5rem' }}>
+            <div className="card stat-card">
+              <div className="card-title">Total Budget</div>
+              <div className="card-value">
+                {formatCurrency(budgets.reduce((sum, b) => sum + b.monthly_limit, 0))}
+              </div>
+            </div>
+            <div className="card stat-card">
+              <div className="card-title">Total Spent</div>
+              <div className="card-value" style={{ color: 'var(--gray-900)' }}>
+                {formatCurrency(budgets.reduce((sum, b) => sum + b.total_spent, 0))}
+              </div>
+            </div>
+            <div className="card stat-card">
+              <div className="card-title">Total Remaining</div>
+              <div className="card-value" style={{
+                color: budgets.reduce((sum, b) => sum + b.remaining, 0) >= 0 ? 'var(--success)' : 'var(--danger)'
+              }}>
+                {formatCurrency(budgets.reduce((sum, b) => sum + b.remaining, 0))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
           {/* Left side - Category List */}
           <div className="card">
             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--gray-900)' }}>
@@ -347,40 +372,9 @@ export default function Budgets() {
               })}
             </div>
 
-            {/* Summary */}
-            <div style={{
-              marginTop: '1.5rem',
-              paddingTop: '1.25rem',
-              borderTop: '1px solid var(--gray-200)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '1rem'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Budget</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)' }}>
-                  {formatCurrency(budgets.reduce((sum, b) => sum + b.monthly_limit, 0))}
-                </div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Spent</div>
-                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--gray-900)' }}>
-                  {formatCurrency(budgets.reduce((sum, b) => sum + b.total_spent, 0))}
-                </div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginBottom: '0.25rem' }}>Total Remaining</div>
-                <div style={{
-                  fontSize: '1.125rem',
-                  fontWeight: 700,
-                  color: budgets.reduce((sum, b) => sum + b.remaining, 0) >= 0 ? 'var(--success)' : 'var(--danger)'
-                }}>
-                  {formatCurrency(budgets.reduce((sum, b) => sum + b.remaining, 0))}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
+        </>
       )}
 
       {showModal && (
