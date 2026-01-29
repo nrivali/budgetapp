@@ -38,6 +38,13 @@ const LoanIcon = () => (
   </svg>
 );
 
+const InvestmentIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+    <polyline points="17 6 23 6 23 12"/>
+  </svg>
+);
+
 const SparklesIcon = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
     <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
@@ -76,17 +83,19 @@ export default function Dashboard() {
 
   // Calculate totals by account type
   const cashAccounts = accounts.filter(a => a.type === 'depository');
+  const investmentAccounts = accounts.filter(a => a.type === 'investment');
   const creditAccounts = accounts.filter(a => a.type === 'credit');
   const loanAccounts = accounts.filter(a => a.type === 'loan');
   const propertyAccounts = accounts.filter(a => a.type === 'property' || a.subtype === 'property');
 
   const totalCash = cashAccounts.reduce((sum, a) => sum + (a.current_balance || 0), 0);
+  const totalInvestments = investmentAccounts.reduce((sum, a) => sum + (a.current_balance || 0), 0);
   const totalProperty = propertyAccounts.reduce((sum, a) => sum + (a.current_balance || 0), 0);
   const totalCredit = creditAccounts.reduce((sum, a) => sum + Math.abs(a.current_balance || 0), 0);
   const totalLoans = loanAccounts.reduce((sum, a) => sum + Math.abs(a.current_balance || 0), 0);
 
   // Net worth = Assets - Liabilities
-  const totalAssets = totalCash + totalProperty;
+  const totalAssets = totalCash + totalInvestments + totalProperty;
   const totalLiabilities = totalCredit + totalLoans;
   const netWorth = totalAssets - totalLiabilities;
 
@@ -206,6 +215,53 @@ export default function Dashboard() {
               ) : (
                 <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
                   No cash accounts linked
+                </div>
+              )}
+            </div>
+
+            {/* Investment Accounts */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '1rem',
+                  background: 'linear-gradient(135deg, #6366F1 0%, #818CF8 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white'
+                }}>
+                  <InvestmentIcon />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)', fontWeight: 500 }}>
+                    Investment Accounts
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--gray-900)' }}>
+                    {formatCurrency(totalInvestments)}
+                  </div>
+                </div>
+              </div>
+              {investmentAccounts.length > 0 ? (
+                <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
+                  {investmentAccounts.map(account => (
+                    <div key={account.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      fontSize: '0.875rem'
+                    }}>
+                      <span style={{ color: 'var(--gray-600)' }}>{account.name}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>
+                        {formatCurrency(account.current_balance)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>
+                  No investment accounts linked
                 </div>
               )}
             </div>
