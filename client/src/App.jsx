@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
+import Categories from './pages/Categories';
 import Accounts from './pages/Accounts';
 import Investments from './pages/Investments';
 import Login from './pages/Login';
@@ -35,6 +36,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="budgets" element={<Budgets />} />
+        <Route path="categories" element={<Categories />} />
         <Route path="accounts" element={<Accounts />} />
         <Route path="investments" element={<Investments />} />
       </Route>
