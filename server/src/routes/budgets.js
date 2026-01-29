@@ -80,7 +80,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
 // Update a budget
 router.put('/:id', authenticateToken, async (req, res, next) => {
   try {
-    const { monthly_limit } = req.body;
+    const { monthly_limit, category } = req.body;
 
     if (monthly_limit === undefined) {
       return res.status(400).json({ error: 'Monthly limit is required' });
@@ -99,10 +99,27 @@ router.put('/:id', authenticateToken, async (req, res, next) => {
       return res.status(404).json({ error: 'Budget not found' });
     }
 
-    await dbRun(
-      'UPDATE budgets SET monthly_limit = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [monthly_limit, req.params.id]
-    );
+    // If category is changing, check it doesn't conflict with another budget
+    if (category && category !== existing.category) {
+      const conflict = await dbGet(
+        'SELECT id FROM budgets WHERE user_id = ? AND category = ? AND id != ?',
+        [req.user.userId, category, req.params.id]
+      );
+
+      if (conflict) {
+        return res.status(409).json({ error: 'Budget for this category already exists' });
+      }
+
+      await dbRun(
+        'UPDATE budgets SET monthly_limit = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [monthly_limit, category, req.params.id]
+      );
+    } else {
+      await dbRun(
+        'UPDATE budgets SET monthly_limit = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [monthly_limit, req.params.id]
+      );
+    }
 
     const budget = await dbGet('SELECT * FROM budgets WHERE id = ?', [req.params.id]);
 

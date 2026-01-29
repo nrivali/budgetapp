@@ -138,10 +138,14 @@ const api = {
     });
   },
 
-  async updateBudget(id, monthlyLimit) {
+  async updateBudget(id, monthlyLimit, category = null) {
+    const body = { monthly_limit: monthlyLimit };
+    if (category) {
+      body.category = category;
+    }
     return this.request(`/budgets/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ monthly_limit: monthlyLimit }),
+      body: JSON.stringify(body),
     });
   },
 

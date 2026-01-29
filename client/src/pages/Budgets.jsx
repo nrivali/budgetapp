@@ -105,11 +105,14 @@ export default function Budgets() {
     }
 
     try {
+      // Convert to uppercase with underscores for storage consistency
+      const categoryKey = formData.category.trim().toUpperCase().replace(/\s+/g, '_').replace(/&/g, 'AND');
+
       if (editingBudget) {
-        await api.updateBudget(editingBudget.id, limit);
+        // Check if category changed
+        const categoryChanged = categoryKey !== editingBudget.category;
+        await api.updateBudget(editingBudget.id, limit, categoryChanged ? categoryKey : null);
       } else {
-        // Convert to uppercase with underscores for storage consistency
-        const categoryKey = formData.category.trim().toUpperCase().replace(/\s+/g, '_').replace(/&/g, 'AND');
         await api.createBudget(categoryKey, limit);
       }
       await loadData();
@@ -148,11 +151,16 @@ export default function Budgets() {
   };
 
   const existingCategories = budgets.map((b) => b.category);
-  const availableCategories = categories.filter((c) => !existingCategories.includes(c));
 
-  // Filter suggestions based on input
-  const filteredSuggestions = availableCategories.filter(cat =>
-    formatCategory(cat).toLowerCase().includes(formData.category.toLowerCase())
+  // When editing, exclude current budget's category from "existing" check
+  const categoriesToExclude = editingBudget
+    ? existingCategories.filter(c => c !== editingBudget.category)
+    : existingCategories;
+
+  // Transaction categories (from transactions page) - prioritized
+  const transactionCategories = categories.filter((c) =>
+    !categoriesToExclude.includes(c) &&
+    formatCategory(c).toLowerCase().includes(formData.category.toLowerCase())
   );
 
   // Common budget categories to suggest
@@ -177,15 +185,16 @@ export default function Budgets() {
     'Other'
   ];
 
-  // Combine transaction categories with common categories, filtering out existing budgets
-  const allSuggestions = [
-    ...filteredSuggestions.map(formatCategory),
-    ...commonCategories.filter(cat =>
-      !existingCategories.some(existing => formatCategory(existing).toLowerCase() === cat.toLowerCase()) &&
-      cat.toLowerCase().includes(formData.category.toLowerCase()) &&
-      !filteredSuggestions.some(s => formatCategory(s).toLowerCase() === cat.toLowerCase())
-    )
-  ].slice(0, 8);
+  // Filtered common categories
+  const filteredCommon = commonCategories.filter(cat =>
+    !categoriesToExclude.some(existing => formatCategory(existing).toLowerCase() === cat.toLowerCase()) &&
+    cat.toLowerCase().includes(formData.category.toLowerCase()) &&
+    !transactionCategories.some(s => formatCategory(s).toLowerCase() === cat.toLowerCase())
+  );
+
+  // Build suggestions with sections
+  const hasTransactionCategories = transactionCategories.length > 0;
+  const hasCommonCategories = filteredCommon.length > 0;
 
   if (loading) {
     return <div className="loading">Loading budgets...</div>;
@@ -280,77 +289,118 @@ export default function Budgets() {
             {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={handleSubmit}>
-              {!editingBudget && (
-                <div className="form-group" style={{ position: 'relative' }}>
-                  <label className="form-label">Category Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.category}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    placeholder="e.g., Groceries, Entertainment, Travel..."
-                    required
-                    autoComplete="off"
-                  />
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label className="form-label">Category Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.category}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="e.g., Groceries, Entertainment, Travel..."
+                  required
+                  autoComplete="off"
+                />
 
-                  {/* Suggestions dropdown */}
-                  {showSuggestions && allSuggestions.length > 0 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      background: 'white',
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: 'var(--radius-lg)',
-                      boxShadow: 'var(--shadow-lg)',
-                      zIndex: 10,
-                      marginTop: '0.25rem',
-                      maxHeight: '200px',
-                      overflowY: 'auto'
-                    }}>
-                      <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600, borderBottom: '1px solid var(--gray-100)' }}>
-                        Suggestions
-                      </div>
-                      {allSuggestions.map((cat, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => selectSuggestion(cat)}
-                          style={{
-                            padding: '0.75rem 1rem',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s',
-                            fontSize: '0.9375rem'
-                          }}
-                          onMouseEnter={(e) => e.target.style.background = 'var(--gray-50)'}
-                          onMouseLeave={(e) => e.target.style.background = 'white'}
-                        >
-                          {cat}
+                {/* Suggestions dropdown with sections */}
+                {showSuggestions && (hasTransactionCategories || hasCommonCategories) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: 'white',
+                    border: '1px solid var(--gray-200)',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-lg)',
+                    zIndex: 10,
+                    marginTop: '0.25rem',
+                    maxHeight: '280px',
+                    overflowY: 'auto'
+                  }}>
+                    {/* Transaction Categories Section */}
+                    {hasTransactionCategories && (
+                      <>
+                        <div style={{
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.75rem',
+                          color: 'var(--primary)',
+                          fontWeight: 600,
+                          background: 'var(--primary-light)',
+                          borderBottom: '1px solid var(--gray-100)'
+                        }}>
+                          From Your Transactions
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        {transactionCategories.slice(0, 5).map((cat, idx) => (
+                          <div
+                            key={`txn-${idx}`}
+                            onClick={() => selectSuggestion(formatCategory(cat))}
+                            style={{
+                              padding: '0.75rem 1rem',
+                              cursor: 'pointer',
+                              transition: 'background 0.15s',
+                              fontSize: '0.9375rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                          >
+                            <span style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              background: 'var(--primary)'
+                            }} />
+                            {formatCategory(cat)}
+                          </div>
+                        ))}
+                      </>
+                    )}
 
-                  <p style={{ fontSize: '0.8125rem', color: 'var(--gray-500)', marginTop: '0.5rem' }}>
-                    Type your own category or select from suggestions
-                  </p>
-                </div>
-              )}
+                    {/* Common Categories Section */}
+                    {hasCommonCategories && (
+                      <>
+                        <div style={{
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.75rem',
+                          color: 'var(--gray-500)',
+                          fontWeight: 600,
+                          background: 'var(--gray-50)',
+                          borderBottom: '1px solid var(--gray-100)',
+                          borderTop: hasTransactionCategories ? '1px solid var(--gray-100)' : 'none'
+                        }}>
+                          Common Categories
+                        </div>
+                        {filteredCommon.slice(0, 5).map((cat, idx) => (
+                          <div
+                            key={`common-${idx}`}
+                            onClick={() => selectSuggestion(cat)}
+                            style={{
+                              padding: '0.75rem 1rem',
+                              cursor: 'pointer',
+                              transition: 'background 0.15s',
+                              fontSize: '0.9375rem'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                          >
+                            {cat}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
 
-              {editingBudget && (
-                <div className="form-group">
-                  <label className="form-label">Category</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.category}
-                    disabled
-                    style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}
-                  />
-                </div>
-              )}
+                <p style={{ fontSize: '0.8125rem', color: 'var(--gray-500)', marginTop: '0.5rem' }}>
+                  {editingBudget
+                    ? 'Change the category or keep the current one'
+                    : 'Select from your transactions or type a custom category'}
+                </p>
+              </div>
 
               <div className="form-group">
                 <label className="form-label">Monthly Budget</label>
