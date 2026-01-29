@@ -51,8 +51,19 @@ const SparklesIcon = () => (
   </svg>
 );
 
+const ScaleIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3v18"/>
+    <path d="M5 6l7-3 7 3"/>
+    <path d="M5 6v6a7 7 0 0 0 7 0 7 7 0 0 0 7 0V6"/>
+    <circle cx="5" cy="12" r="2"/>
+    <circle cx="19" cy="12" r="2"/>
+  </svg>
+);
+
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [budgetStatus, setBudgetStatus] = useState(null);
   const [spending, setSpending] = useState([]);
   const [monthly, setMonthly] = useState([]);
@@ -60,13 +71,15 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [summaryData, budgetData, spendingData, monthlyData] = await Promise.all([
+      const [summaryData, accountsData, budgetData, spendingData, monthlyData] = await Promise.all([
         api.getAccountSummary(),
+        api.getAccounts(),
         api.getBudgetStatus(),
         api.getSpendingByCategory(),
         api.getMonthlySpending(),
       ]);
       setSummary(summaryData);
+      setAccounts(accountsData.accounts || []);
       setBudgetStatus(budgetData);
       setSpending(spendingData.spending || []);
       setMonthly(monthlyData.monthly || []);
@@ -112,6 +125,15 @@ export default function Dashboard() {
   const budgetRemaining = totalBudget - totalSpent;
   const accountCount = summary?.summary?.reduce((sum, s) => sum + s.account_count, 0) || 0;
 
+  // Calculate net worth: Assets - Liabilities
+  const assets = accounts
+    .filter(acc => ['depository', 'investment'].includes(acc.type))
+    .reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
+  const liabilities = accounts
+    .filter(acc => ['credit', 'loan'].includes(acc.type))
+    .reduce((sum, acc) => sum + Math.abs(acc.current_balance || 0), 0);
+  const netWorth = assets - liabilities;
+
   if (loading) {
     return <div className="loading">Loading your finances...</div>;
   }
@@ -143,6 +165,68 @@ export default function Dashboard() {
           <p className="page-subtitle">Track your finances at a glance</p>
         </div>
         <PlaidLinkButton onSuccess={loadData} />
+      </div>
+
+      {/* Net Worth Card - Full Width */}
+      <div className="card" style={{
+        marginBottom: '1.5rem',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        color: 'white',
+        padding: '2rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.7, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Net Worth
+            </div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
+              {formatCurrency(netWorth)}
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', fontSize: '0.875rem' }}>
+              <span style={{ opacity: 0.8 }}>
+                <span style={{ color: '#34D399' }}>Assets:</span> {formatCurrency(assets)}
+              </span>
+              <span style={{ opacity: 0.8 }}>
+                <span style={{ color: '#F87171' }}>Liabilities:</span> {formatCurrency(liabilities)}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Cash</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                {formatCurrency(accounts.filter(a => a.type === 'depository').reduce((s, a) => s + (a.current_balance || 0), 0))}
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Investments</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                {formatCurrency(accounts.filter(a => a.type === 'investment').reduce((s, a) => s + (a.current_balance || 0), 0))}
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Debt</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#F87171' }}>
+                -{formatCurrency(liabilities)}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card-grid">
