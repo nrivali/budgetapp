@@ -4,7 +4,7 @@ import api from '../services/api';
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [customCategories, setCustomCategories] = useState([]);
+  const [budgets, setBudgets] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, has_more: false });
   const [loading, setLoading] = useState(true);
@@ -36,14 +36,14 @@ export default function Transactions() {
 
   const loadFiltersData = async () => {
     try {
-      const [categoriesData, accountsData, customCategoriesData] = await Promise.all([
+      const [categoriesData, accountsData, budgetsData] = await Promise.all([
         api.getCategories(),
         api.getAccounts(),
-        api.getCustomCategories(),
+        api.getBudgets(),
       ]);
       setCategories(categoriesData.categories || []);
       setAccounts(accountsData.accounts || []);
-      setCustomCategories(customCategoriesData.categories || []);
+      setBudgets(budgetsData.budgets || []);
     } catch (err) {
       console.error('Error loading filter data:', err);
     }
@@ -102,57 +102,11 @@ export default function Transactions() {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-<<<<<<< HEAD
-  // Get filtered suggestions based on input - prioritizes custom categories
-  const getSuggestions = () => {
-    const input = editCategory.toLowerCase();
-
-    // Custom categories (user-defined) - highest priority
-    const customFormatted = customCategories
-      .map(c => ({ name: formatCategory(c.name), color: c.color, isCustom: true }))
-      .filter(cat => cat.name.toLowerCase().includes(input));
-
-    // Existing transaction categories
-    const existingFormatted = categories
-      .map(c => ({ name: formatCategory(c), color: null, isCustom: false }))
-      .filter(cat =>
-        cat.name.toLowerCase().includes(input) &&
-        !customFormatted.some(cf => cf.name.toLowerCase() === cat.name.toLowerCase())
-      );
-
-    // Return custom categories first, then existing
-    return [...customFormatted, ...existingFormatted].slice(0, 10);
-  };
-
-  const hasCustomCategories = customCategories.length > 0;
-
-  const handleEditCategory = (txn) => {
-    setEditingTxnId(txn.id);
-    setEditCategory(formatCategory(txn.category));
-    setShowSuggestions(true);
-    setTimeout(() => editInputRef.current?.focus(), 50);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTxnId(null);
-    setEditCategory('');
-    setShowSuggestions(false);
-  };
-
-  const handleSaveCategory = async (txnId) => {
-    if (!editCategory.trim()) {
-      handleCancelEdit();
-      return;
-    }
-
-    setSavingCategory(true);
-=======
   // Handle category change from dropdown
   const handleCategoryChange = async (txnId, newCategoryName) => {
     if (!newCategoryName) return;
 
     setSavingTxnId(txnId);
->>>>>>> 280851c34208fec6a0c11969d5412bf350c0a5e3
     try {
       await api.updateTransactionCategory(txnId, newCategoryName);
 
@@ -255,120 +209,6 @@ export default function Transactions() {
                         <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{txn.name}</div>
                       )}
                     </td>
-<<<<<<< HEAD
-                    <td style={{ position: 'relative' }}>
-                      {editingTxnId === txn.id ? (
-                        <div style={{ position: 'relative' }}>
-                          <input
-                            ref={editInputRef}
-                            type="text"
-                            value={editCategory}
-                            onChange={(e) => {
-                              setEditCategory(e.target.value);
-                              setShowSuggestions(true);
-                            }}
-                            onKeyDown={(e) => handleKeyDown(e, txn.id)}
-                            onBlur={() => setTimeout(() => {
-                              if (!savingCategory) handleCancelEdit();
-                            }, 200)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.75rem',
-                              border: '2px solid var(--primary)',
-                              borderRadius: '0.25rem',
-                              outline: 'none',
-                              width: '140px',
-                            }}
-                            disabled={savingCategory}
-                            autoComplete="off"
-                          />
-
-                          {/* Suggestions dropdown */}
-                          {showSuggestions && getSuggestions().length > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '100%',
-                              left: 0,
-                              width: '220px',
-                              background: 'white',
-                              border: '1px solid var(--gray-200)',
-                              borderRadius: '0.5rem',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                              zIndex: 100,
-                              marginTop: '0.25rem',
-                              maxHeight: '250px',
-                              overflowY: 'auto'
-                            }}>
-                              {hasCustomCategories && getSuggestions().some(c => c.isCustom) && (
-                                <div style={{
-                                  padding: '0.4rem 0.75rem',
-                                  fontSize: '0.6875rem',
-                                  fontWeight: 600,
-                                  color: 'var(--primary)',
-                                  background: 'var(--primary-50)',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em'
-                                }}>
-                                  Your Categories
-                                </div>
-                              )}
-                              {getSuggestions().map((cat, idx) => (
-                                <div
-                                  key={idx}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    selectSuggestion(cat.name);
-                                  }}
-                                  style={{
-                                    padding: '0.5rem 0.75rem',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8125rem',
-                                    transition: 'background 0.15s',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                                >
-                                  {cat.isCustom && (
-                                    <span style={{
-                                      width: '8px',
-                                      height: '8px',
-                                      borderRadius: '50%',
-                                      background: cat.color || 'var(--primary)',
-                                      flexShrink: 0
-                                    }} />
-                                  )}
-                                  {cat.name}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span
-                          onClick={() => handleEditCategory(txn)}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            background: '#F3F4F6',
-                            borderRadius: '0.25rem',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            transition: 'background 0.15s',
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#E5E7EB'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = '#F3F4F6'}
-                          title="Click to edit category"
-                        >
-                          {formatCategory(txn.category)}
-                          <EditIcon />
-                        </span>
-                      )}
-=======
                     <td>
                       <select
                         value={txn.category || ''}
@@ -386,22 +226,18 @@ export default function Transactions() {
                         }}
                       >
                         <option value="">Select category...</option>
-                        {customCategories.length > 0 && (
-                          <optgroup label="Your Categories">
-                            {customCategories.map((cat) => (
-                              <option key={cat.id} value={cat.name}>
-                                {formatCategory(cat.name)}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {customCategories.length === 0 && (
+                        {budgets.length > 0 ? (
+                          budgets.map((budget) => (
+                            <option key={budget.id} value={budget.category}>
+                              {formatCategory(budget.category)}
+                            </option>
+                          ))
+                        ) : (
                           <option value="" disabled>
-                            No categories created yet
+                            No budgets created yet
                           </option>
                         )}
                       </select>
->>>>>>> 280851c34208fec6a0c11969d5412bf350c0a5e3
                     </td>
                     <td>{txn.account_name} (...{txn.account_mask})</td>
                     <td style={{ textAlign: 'right' }}>

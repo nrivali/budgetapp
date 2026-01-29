@@ -5,13 +5,53 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Default budget categories with suggested monthly limits
+const DEFAULT_BUDGETS = [
+  { category: 'HOUSING', monthly_limit: 1500 },
+  { category: 'GROCERIES', monthly_limit: 400 },
+  { category: 'UTILITIES_AND_BILLS', monthly_limit: 200 },
+  { category: 'RESTAURANTS', monthly_limit: 200 },
+  { category: 'ENTERTAINMENT', monthly_limit: 100 },
+  { category: 'SHOPPING', monthly_limit: 150 },
+  { category: 'TRAVEL', monthly_limit: 200 },
+  { category: 'SUBSCRIPTIONS', monthly_limit: 50 },
+  { category: 'INSURANCE', monthly_limit: 200 },
+  { category: 'MEDICAL', monthly_limit: 100 },
+  { category: 'LOAN_REPAYMENT', monthly_limit: 300 },
+  { category: 'KIDS', monthly_limit: 150 },
+  { category: 'PETS', monthly_limit: 75 },
+  { category: 'GIFTS', monthly_limit: 50 },
+  { category: 'CHARITY', monthly_limit: 50 },
+  { category: 'MISC', monthly_limit: 100 },
+];
+
+// Seed default budgets for a new user
+async function seedDefaultBudgets(userId) {
+  for (const budget of DEFAULT_BUDGETS) {
+    const budgetId = uuidv4();
+    await dbRun(
+      'INSERT INTO budgets (id, user_id, category, monthly_limit) VALUES (?, ?, ?, ?)',
+      [budgetId, userId, budget.category, budget.monthly_limit]
+    );
+  }
+}
+
 // Get all budgets for the user
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
-    const budgets = await dbAll(
+    let budgets = await dbAll(
       'SELECT * FROM budgets WHERE user_id = ? ORDER BY category',
       [req.user.userId]
     );
+
+    // Seed default budgets if user has none
+    if (budgets.length === 0) {
+      await seedDefaultBudgets(req.user.userId);
+      budgets = await dbAll(
+        'SELECT * FROM budgets WHERE user_id = ? ORDER BY category',
+        [req.user.userId]
+      );
+    }
 
     res.json({ budgets });
   } catch (error) {
@@ -161,10 +201,19 @@ router.get('/status/current', authenticateToken, async (req, res, next) => {
     const startDate = `${year}-${month}-01`;
     const endDate = `${year}-${month}-31`;
 
-    const budgets = await dbAll(
+    let budgets = await dbAll(
       'SELECT * FROM budgets WHERE user_id = ?',
       [req.user.userId]
     );
+
+    // Seed default budgets if user has none
+    if (budgets.length === 0) {
+      await seedDefaultBudgets(req.user.userId);
+      budgets = await dbAll(
+        'SELECT * FROM budgets WHERE user_id = ?',
+        [req.user.userId]
+      );
+    }
 
     const budgetStatus = await Promise.all(
       budgets.map(async (budget) => {
