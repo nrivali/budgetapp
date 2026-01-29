@@ -8,6 +8,7 @@ const plaidRoutes = require('./routes/plaid');
 const accountRoutes = require('./routes/accounts');
 const transactionRoutes = require('./routes/transactions');
 const budgetRoutes = require('./routes/budgets');
+const investmentRoutes = require('./routes/investments');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,6 +23,7 @@ app.use('/api/plaid', plaidRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/budgets', budgetRoutes);
+app.use('/api/investments', investmentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

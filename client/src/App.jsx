@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
 import Accounts from './pages/Accounts';
+import Investments from './pages/Investments';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="transactions" element={<Transactions />} />
         <Route path="budgets" element={<Budgets />} />
         <Route path="accounts" element={<Accounts />} />
+        <Route path="investments" element={<Investments />} />
       </Route>
     </Routes>
   );

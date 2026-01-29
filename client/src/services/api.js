@@ -115,6 +115,13 @@ const api = {
     return this.request('/transactions/meta/categories');
   },
 
+  async updateTransactionCategory(transactionId, category) {
+    return this.request(`/transactions/${transactionId}/category`, {
+      method: 'PUT',
+      body: JSON.stringify({ category }),
+    });
+  },
+
   // Budgets
   async getBudgets() {
     return this.request('/budgets');
@@ -144,6 +151,15 @@ const api = {
 
   async getBudgetHistory(id) {
     return this.request(`/budgets/${id}/history`);
+  },
+
+  // Investments
+  async getInvestmentHoldings() {
+    return this.request('/investments/holdings');
+  },
+
+  async getInvestmentTransactions() {
+    return this.request('/investments/transactions');
   },
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import PlaidLinkButton from '../components/PlaidLink';
 
@@ -51,8 +51,19 @@ const SparklesIcon = () => (
   </svg>
 );
 
+const ScaleIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3v18"/>
+    <path d="M5 6l7-3 7 3"/>
+    <path d="M5 6v6a7 7 0 0 0 7 0 7 7 0 0 0 7 0V6"/>
+    <circle cx="5" cy="12" r="2"/>
+    <circle cx="19" cy="12" r="2"/>
+  </svg>
+);
+
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [budgetStatus, setBudgetStatus] = useState(null);
   const [spending, setSpending] = useState([]);
   const [monthly, setMonthly] = useState([]);
@@ -60,13 +71,15 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [summaryData, budgetData, spendingData, monthlyData] = await Promise.all([
+      const [summaryData, accountsData, budgetData, spendingData, monthlyData] = await Promise.all([
         api.getAccountSummary(),
+        api.getAccounts(),
         api.getBudgetStatus(),
         api.getSpendingByCategory(),
         api.getMonthlySpending(),
       ]);
       setSummary(summaryData);
+      setAccounts(accountsData.accounts || []);
       setBudgetStatus(budgetData);
       setSpending(spendingData.spending || []);
       setMonthly(monthlyData.monthly || []);
@@ -97,10 +110,29 @@ export default function Dashboard() {
     }).format(amount || 0);
   };
 
+  // Format category names: "RENT_AND_UTILITIES" -> "Rent & Utilities"
+  const formatCategory = (category) => {
+    if (!category) return '';
+    return category
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\band\b/g, '&')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   const totalSpent = budgetStatus?.budgets?.reduce((sum, b) => sum + b.total_spent, 0) || 0;
   const totalBudget = budgetStatus?.budgets?.reduce((sum, b) => sum + b.monthly_limit, 0) || 0;
   const budgetRemaining = totalBudget - totalSpent;
   const accountCount = summary?.summary?.reduce((sum, s) => sum + s.account_count, 0) || 0;
+
+  // Calculate net worth: Assets - Liabilities
+  const assets = accounts
+    .filter(acc => ['depository', 'investment'].includes(acc.type))
+    .reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
+  const liabilities = accounts
+    .filter(acc => ['credit', 'loan'].includes(acc.type))
+    .reduce((sum, acc) => sum + Math.abs(acc.current_balance || 0), 0);
+  const netWorth = assets - liabilities;
 
   if (loading) {
     return <div className="loading">Loading your finances...</div>;
@@ -133,6 +165,68 @@ export default function Dashboard() {
           <p className="page-subtitle">Track your finances at a glance</p>
         </div>
         <PlaidLinkButton onSuccess={loadData} />
+      </div>
+
+      {/* Net Worth Card - Full Width */}
+      <div className="card" style={{
+        marginBottom: '1.5rem',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        color: 'white',
+        padding: '2rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.7, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Net Worth
+            </div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
+              {formatCurrency(netWorth)}
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', fontSize: '0.875rem' }}>
+              <span style={{ opacity: 0.8 }}>
+                <span style={{ color: '#34D399' }}>Assets:</span> {formatCurrency(assets)}
+              </span>
+              <span style={{ opacity: 0.8 }}>
+                <span style={{ color: '#F87171' }}>Liabilities:</span> {formatCurrency(liabilities)}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Cash</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                {formatCurrency(accounts.filter(a => a.type === 'depository').reduce((s, a) => s + (a.current_balance || 0), 0))}
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Investments</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                {formatCurrency(accounts.filter(a => a.type === 'investment').reduce((s, a) => s + (a.current_balance || 0), 0))}
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1rem 1.5rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>Debt</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#F87171' }}>
+                -{formatCurrency(liabilities)}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card-grid">
@@ -198,30 +292,50 @@ export default function Dashboard() {
               }}></span>
               Spending by Category
             </h3>
-            <ResponsiveContainer width="100%" height={320}>
-              <PieChart>
-                <Pie
-                  data={spending.slice(0, 8)}
+            <ResponsiveContainer width="100%" height={Math.max(280, spending.slice(0, 8).length * 45)}>
+              <BarChart
+                data={spending.slice(0, 8)
+                  .sort((a, b) => b.total_amount - a.total_amount)
+                  .map((item, index) => ({
+                    ...item,
+                    name: formatCategory(item.category),
+                    fill: COLORS[index % COLORS.length]
+                  }))}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis
+                  type="number"
+                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#374151', fontSize: 13, fontWeight: 500 }}
+                  width={130}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                />
+                <Bar
                   dataKey="total_amount"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={110}
-                  paddingAngle={3}
-                  label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={{ stroke: '#D1D5DB', strokeWidth: 1 }}
+                  name="Amount"
+                  radius={[0, 6, 6, 0]}
+                  barSize={28}
                 >
-                  {spending.slice(0, 8).map((entry, index) => (
-                    <Cell
-                      key={entry.category}
-                      fill={COLORS[index % COLORS.length]}
-                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
+                  {spending.slice(0, 8)
+                    .sort((a, b) => b.total_amount - a.total_amount)
+                    .map((entry, index) => (
+                      <Cell key={entry.category} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
@@ -303,7 +417,7 @@ export default function Dashboard() {
             {budgetStatus.budgets.map((budget) => (
               <div key={budget.id} className="budget-progress">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{budget.category}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{formatCategory(budget.category)}</span>
                   <span style={{
                     fontWeight: 500,
                     color: budget.is_over_budget ? 'var(--danger)' : 'var(--gray-600)',
